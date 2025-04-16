@@ -34,7 +34,7 @@ rm -f "$LOGROTATE_PATH"
 echo "[*] Removed logrotate config: $LOGROTATE_PATH"
 
 # Remove append-only flag
-if [ -f "$LOG_PATH" ]; then
+if [ -f "$LOG_PATH" ] && [[ "$(uname -s)" != "Darwin" ]]; then
   echo "[*] Unlocking append-only flag on $LOG_PATH..."
   chattr -a "$LOG_PATH" || echo "⚠️ Could not remove append-only attribute."
 fi
