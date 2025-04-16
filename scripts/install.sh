@@ -68,3 +68,24 @@ if [[ "$linkme" =~ ^[Yy]$ ]]; then
 fi
 
 echo "✅ ruin-kubectl installed successfully."
+
+if ! command -v ruin-kubectl >/dev/null 2>&1; then
+  echo "⚠️  ruin-kubectl is not currently in your \$PATH."
+  echo "👉 You can add it by appending the following to your shell config:"
+  echo ""
+  echo "  export PATH=\"/usr/local/bin:\$PATH\""
+  echo ""
+  echo "Or move it to a user bin directory (e.g. ~/.local/bin) and update your shell:"
+  echo ""
+  echo "  mkdir -p ~/.local/bin"
+  echo "  mv /usr/local/bin/ruin-kubectl ~/.local/bin/"
+  echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc  # or ~/.bashrc"
+  echo ""
+fi
+
+echo "To enable kubectl autocompletion for ruin-kubectl, add the following to your shell config:"
+echo ""
+echo "autoload -Uz compinit"
+echo "compinit"
+echo "source <(kubectl completion zsh)"
+echo "compdef ruin-kubectl=kubectl"
