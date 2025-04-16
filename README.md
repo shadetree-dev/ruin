@@ -1,2 +1,3 @@
 # ruin
-Ruin everything in the cloud...for safety!
+
+Ruin everything — safely. A CLI protection wrapper for tools like `kubectl` to prevent unintentional damage to sensitive environments.
