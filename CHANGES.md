@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/) (assuming I d
 
 ## [0.1.0] - 2024-04-16
 ### Added
-- Initial release of `ruin-kubectl`!
+- Initial pre-release of `ruin-kubectl`!
 - Created `Go` binary that enables prompting for protected Kubernetes contexts, logging, checking for context updates, and more.
 - `ruin-kubectl init` flow for first-time setup.
 - `sudo` authentication with grace period for protected contexts.
