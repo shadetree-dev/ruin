@@ -1,11 +1,6 @@
 # ruin 🌧
 
-> "Ruin everything. But safely."
-
-[![Release](https://img.shields.io/github/v/release/yourorg/ruin)](https://github.com/yourorg/ruin/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/yourorg/ruin/go.yml)](https://github.com/yourorg/ruin/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/yourorg/ruin)](https://goreportcard.com/report/github.com/yourorg/ruin)
-[![License](https://img.shields.io/github/license/yourorg/ruin)](https://github.com/yourorg/ruin/blob/main/LICENSE)
+> "Ruin everything. Except your important resources."
 
 `ruin-kubectl` is a secure wrapper for `kubectl` that:
 - Prevents accidental production mistakes
@@ -27,8 +22,12 @@
 
 ## 🚀 Quick Install
 
+Clone this project and run the installation script.
+
 ```bash
-curl -sSL https://raw.githubusercontent.com/shadetree-dev/ruin/main/scripts/install.sh | bash
+git clone https://github.com/shadetree-dev/ruin.git
+chmod +x scripts/*
+sudo ./scripts/install.sh
 ```
 
 ## 🗑️ Uninstall
@@ -46,7 +45,8 @@ sudo ./scripts/uninstall.sh --full-clean
 ### Step 1: Initialize
 
 ```bash
-ruin-kubectl init     # launches interactive setup
+# Launches interactive setup
+ruin-kubectl init
 ```
 
 ### Step 2: Use it like `kubectl`
