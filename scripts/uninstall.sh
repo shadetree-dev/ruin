@@ -3,6 +3,11 @@
 
 set -e
 
+if [[ $EUID -ne 0 ]]; then
+  echo "❌ This script must be run as root. Try: sudo ./scripts/uninstall.sh"
+  exit 1
+fi
+
 BIN_NAME="ruin-kubectl"
 INSTALL_PATH="/usr/local/bin"
 CONFIG_PATH="/etc/ruin"
