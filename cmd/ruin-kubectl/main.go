@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/sha256"
 	"fmt"
 	"os"
 	"os/exec"
@@ -23,9 +22,7 @@ func main() {
 		runInit()
 		return
 	}
-
 	cfg := config.LoadConfig()
-	checkForNewContexts()
 
 	currentContext, err := context.GetCurrentContext()
 	if err != nil {
@@ -43,6 +40,7 @@ func main() {
 			auth.TouchAuthCache(currentContext)
 		}
 
+		// Awareness prompt layer
 		if !awareness.ShouldSkipAwareness(cfg, os.Args[1:]) {
 			if !awareness.Run(cfg, currentContext, os.Args[1:]) {
 				fmt.Println("Command cancelled.")
@@ -56,23 +54,12 @@ func main() {
 }
 
 func runInit() {
-	reader := bufio.NewReader(os.Stdin)
-
-	useEtc := false
-	if os.Geteuid() != 0 {
-		fmt.Print("🛡  Not running as root. Relaunch with sudo to configure /etc/ruin? [y/N]: ")
-		resp, _ := reader.ReadString('\n')
-		if strings.TrimSpace(strings.ToLower(resp)) == "y" {
-			cmd := exec.Command("sudo", os.Args[0], "init")
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			cmd.Run()
-			os.Exit(0)
-		}
-	} else {
-		useEtc = true
+	if os.Geteuid() == 0 {
+		fmt.Fprintln(os.Stderr, "⚠️  Do not run 'ruin-kubectl init' as root. Please run it as your user to access your kubeconfig and AWS credentials.")
+		os.Exit(1)
 	}
+
+	reader := bufio.NewReader(os.Stdin)
 
 	out, err := exec.Command("kubectl", "config", "get-contexts", "-o", "name").Output()
 	if err != nil {
@@ -136,8 +123,7 @@ func runInit() {
 	configYAML := fmt.Sprintf(`
 kubectl:
   protected_contexts:
-%s
-  auth_method: sudo
+%s  auth_method: sudo
   grace_period_seconds: %s
   awareness_prompt:
     mode: %s
@@ -152,7 +138,7 @@ audit:
 `, formatListYAML("    - ", protected), grace, mode, pauseSeconds, logPath)
 
 	var path string
-	if useEtc {
+	if os.Geteuid() == 0 {
 		path = "/etc/ruin/config"
 		os.MkdirAll("/etc/ruin", 0755)
 	} else {
@@ -169,7 +155,7 @@ audit:
 		defer f.Close()
 		fmt.Println("📓 Log file created or writable at:", logPath)
 	} else {
-		fmt.Println("⚠️  Could not create log file:", err)
+		fmt.Println("⚠️ Could not create log file:", err)
 	}
 
 	fmt.Println("✅ Config written to:", path)
@@ -181,27 +167,4 @@ func formatListYAML(prefix string, values []string) string {
 		sb.WriteString(fmt.Sprintf("%s%s\n", prefix, v))
 	}
 	return sb.String()
-}
-
-func checkForNewContexts() {
-	out, err := exec.Command("kubectl", "config", "get-contexts", "-o", "name").Output()
-	if err != nil {
-		return // silently skip if kubectl fails
-	}
-
-	hash := sha256.Sum256(out)
-	hashHex := fmt.Sprintf("%x", hash[:])
-
-	cachePath := filepath.Join(os.Getenv("HOME"), ".ruin/.kube_contexts.hash")
-	_ = os.MkdirAll(filepath.Dir(cachePath), 0700)
-
-	existing, err := os.ReadFile(cachePath)
-	if err == nil && strings.TrimSpace(string(existing)) == hashHex {
-		return // same, do nothing
-	}
-
-	// If we're here, hash changed
-	fmt.Println("📣 New Kubernetes contexts detected.")
-	fmt.Println("👉 Run `ruin-kubectl init` to update protected contexts.")
-	_ = os.WriteFile(cachePath, []byte(hashHex), 0600)
 }
