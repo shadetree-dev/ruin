@@ -3,6 +3,11 @@
 
 set -e
 
+if [[ $EUID -ne 0 ]]; then
+  echo "❌ This script must be run as root. Try: sudo ./scripts/install.sh"
+  exit 1
+fi
+
 BIN_NAME="ruin-kubectl"
 INSTALL_PATH="/usr/local/bin"
 CONFIG_PATH="/etc/ruin"
@@ -10,6 +15,13 @@ CONFIG_FILE="$CONFIG_PATH/config"
 LOG_PATH="/var/log/ruin.log"
 LOGROTATE_SRC="./etc/logrotate.d/ruin"
 LOGROTATE_DEST="/etc/logrotate.d/ruin"
+LAUNCHD_PLIST_SRC="./etc/macos/ruin.logrotate.plist"
+LAUNCHD_PLIST_DEST="/Library/LaunchDaemons/com.yourorg.ruinlogrotate.plist"
+ROTATE_SCRIPT_SRC="./scripts/rotate-ruin-log.sh"
+ROTATE_SCRIPT_DEST="/usr/local/bin/rotate-ruin-log.sh"
+
+TARGET_USER="${SUDO_USER:-$USER}"
+PRIMARY_GROUP=$(id -gn "$TARGET_USER")
 
 # Ensure binary exists
 if [ ! -f "$BIN_NAME" ]; then
@@ -29,13 +41,13 @@ cp ./etc/ruin/config.example.yaml "$CONFIG_FILE"
 # Set up log file with safe permissions
 echo "[*] Creating log file at $LOG_PATH..."
 touch "$LOG_PATH"
+
 if command -v groupadd >/dev/null 2>&1 && command -v usermod >/dev/null 2>&1; then
   groupadd -f ruinlog
-  usermod -a -G ruinlog "$SUDO_USER"
+  usermod -a -G ruinlog "$TARGET_USER"
   chown root:ruinlog "$LOG_PATH"
 else
-    PRIMARY_GROUP=$(id -gn "$SUDO_USER")
-    chown root:"$PRIMARY_GROUP" "$LOG_PATH"
+  chown root:"$PRIMARY_GROUP" "$LOG_PATH"
 fi
 chmod 664 "$LOG_PATH"
 
@@ -47,13 +59,13 @@ else
   echo "⚠️ chattr not available, skipping append-only enforcement."
 fi
 
-# Set up logrotate
+# Set up logrotate or launchd
 if [[ "$(uname -s)" == "Darwin" ]]; then
   echo "[*] Setting up launchd log rotation for macOS..."
-  cp ./scripts/rotate-ruin-log.sh /usr/local/bin/rotate-ruin-log.sh
-  chmod +x /usr/local/bin/rotate-ruin-log.sh
-  cp ./etc/macos/ruin.logrotate.plist /Library/LaunchDaemons/com.yourorg.ruinlogrotate.plist
-  launchctl load /Library/LaunchDaemons/com.yourorg.ruinlogrotate.plist
+  cp "$ROTATE_SCRIPT_SRC" "$ROTATE_SCRIPT_DEST"
+  chmod +x "$ROTATE_SCRIPT_DEST"
+  cp "$LAUNCHD_PLIST_SRC" "$LAUNCHD_PLIST_DEST"
+  launchctl load "$LAUNCHD_PLIST_DEST"
 else
   echo "[*] Installing logrotate config for Linux..."
   mkdir -p "$(dirname "$LOGROTATE_DEST")"
@@ -67,21 +79,21 @@ if [[ "$linkme" =~ ^[Yy]$ ]]; then
   echo "[*] Symlink created: kubectl -> $BIN_NAME"
 fi
 
-echo "✅ ruin-kubectl installed successfully."
-
+# Recommend PATH update if not found
 if ! command -v ruin-kubectl >/dev/null 2>&1; then
-  echo "⚠️  ruin-kubectl is not currently in your \$PATH."
+  echo "⚠️ ruin-kubectl is not currently in your \$PATH."
   echo "👉 You can add it by appending the following to your shell config:"
   echo ""
   echo "  export PATH=\"/usr/local/bin:\$PATH\""
   echo ""
   echo "Or move it to a user bin directory (e.g. ~/.local/bin) and update your shell:"
-  echo ""
   echo "  mkdir -p ~/.local/bin"
   echo "  mv /usr/local/bin/ruin-kubectl ~/.local/bin/"
   echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc  # or ~/.bashrc"
   echo ""
 fi
+
+echo "✅ ruin-kubectl installed successfully."
 
 echo "To enable kubectl autocompletion for ruin-kubectl, add the following to your shell config:"
 echo ""

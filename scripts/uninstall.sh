@@ -8,6 +8,8 @@ INSTALL_PATH="/usr/local/bin"
 CONFIG_PATH="/etc/ruin"
 LOG_PATH="/var/log/ruin.log"
 LOGROTATE_PATH="/etc/logrotate.d/ruin"
+LAUNCHD_PLIST="/Library/LaunchDaemons/com.yourorg.ruinlogrotate.plist"
+ROTATE_SCRIPT="/usr/local/bin/rotate-ruin-log.sh"
 
 FULL_CLEAN=false
 if [[ "$1" == "--full-clean" ]]; then
@@ -30,11 +32,13 @@ rm -rf "$CONFIG_PATH"
 echo "[*] Removed config directory: $CONFIG_PATH"
 
 # Remove logrotate config
-rm -f "$LOGROTATE_PATH"
-echo "[*] Removed logrotate config: $LOGROTATE_PATH"
+if [[ "$(uname -s)" == "Linux" ]]; then
+  rm -f "$LOGROTATE_PATH"
+  echo "[*] Removed logrotate config: $LOGROTATE_PATH"
+fi
 
-# Remove append-only flag
-if [ -f "$LOG_PATH" ] && [ "$(uname -s)" != "Darwin" ]; then
+# Remove append-only flag (only Linux)
+if [[ "$(uname -s)" == "Linux" && -f "$LOG_PATH" ]]; then
   echo "[*] Unlocking append-only flag on $LOG_PATH..."
   chattr -a "$LOG_PATH" || echo "⚠️ Could not remove append-only attribute."
 fi
@@ -54,11 +58,13 @@ else
   fi
 fi
 
+# macOS-specific: remove launchd job and script
 if [[ "$(uname -s)" == "Darwin" ]]; then
   echo "[*] Removing launchd logrotate job..."
-  launchctl unload /Library/LaunchDaemons/com.yourorg.ruinlogrotate.plist 2>/dev/null || true
-  rm -f /Library/LaunchDaemons/com.yourorg.ruinlogrotate.plist
-  rm -f /usr/local/bin/rotate-ruin-log.sh
+  launchctl unload "$LAUNCHD_PLIST" 2>/dev/null || true
+  rm -f "$LAUNCHD_PLIST"
+  rm -f "$ROTATE_SCRIPT"
+  echo "[*] Removed macOS launchd config and script."
 fi
 
 echo "✅ $BIN_NAME has been uninstalled."
