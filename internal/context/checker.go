@@ -1,14 +1,28 @@
 package context
 
 import (
+	"bytes"
+	"fmt"
+	"os"
 	"os/exec"
-	"strings"
 )
 
 func GetCurrentContext() (string, error) {
-	out, err := exec.Command("kubectl", "config", "current-context").Output()
+	cmd := exec.Command("kubectl", "config", "current-context")
+
+	// Pass full user environment
+	cmd.Env = os.Environ()
+
+	// Capture output
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("kubectl failed: %v\nstderr: %s", err, stderr.String())
 	}
-	return strings.TrimSpace(string(out)), nil
+
+	return out.String(), nil
 }
