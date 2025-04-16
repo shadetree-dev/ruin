@@ -1,0 +1,15 @@
+kubectl:
+  protected_contexts:
+    - "*"
+  auth_method: sudo
+  grace_period_seconds: 300
+  awareness_prompt:
+    mode: pause
+    pause_seconds: 5
+    only_on_write: true
+
+audit:
+  log_path: /var/log/ruin.log
+  forward_url: ""
+  fallback_local: true
+  max_log_size_bytes: 5242880  # 5MB

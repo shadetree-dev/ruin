@@ -1,19 +1,15 @@
 package auth
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 )
 
 func Authenticate(method string) bool {
-	switch method {
-	case "sudo":
+	if method == "sudo" {
 		return runSudoCheck()
-	default:
-		fmt.Printf("Unsupported auth method: %s\n", method)
-		return false
 	}
+	return false
 }
 
 func runSudoCheck() bool {
@@ -21,6 +17,5 @@ func runSudoCheck() bool {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	return err == nil
+	return cmd.Run() == nil
 }

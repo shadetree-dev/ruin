@@ -23,5 +23,5 @@ func CheckAuthCache(context string, graceSeconds int) bool {
 
 func TouchAuthCache(context string) {
 	path := getCachePath(context)
-	_ = os.WriteFile(path, []byte(strconv.FormatInt(time.Now().Unix(), 10)), 0644)
+	_ = os.WriteFile(path, []byte(strconv.FormatInt(time.Now().Unix(), 10)), 0600)
 }
