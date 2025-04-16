@@ -1,0 +1,41 @@
+# Go binaries and build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go modules
+vendor/
+go.sum
+
+# IDEs/editors
+.vscode/
+.idea/
+*.sw?
+
+# macOS system files
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.bak
+*.tmp
+*.swp
+*.swo
+*~
+
+# Coverage/test artifacts
+coverage.*
+*.coverprofile
+
+# Local config
+.env
+.env.*
+
+# ruin-specific
+ruin-kubectl
+rotate-ruin-log.sh
