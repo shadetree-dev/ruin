@@ -16,6 +16,7 @@ import (
 var writeOps = map[string]bool{
 	"apply": true, "create": true, "delete": true, "edit": true,
 	"patch": true, "replace": true, "scale": true, "rollout": true,
+	"drain": true,
 }
 
 func ShouldSkipAwareness(cfg config.Config, args []string) bool {
