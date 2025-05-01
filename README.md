@@ -1,10 +1,13 @@
 # ruin 🌧
 
-> "Ruin everything. Except your important resources."
+> "Ruin your CLI tools, not your important resources."
+
+> [!INFO]
+> Ruin is meant to be a generalized wrapper that will be extensible for other CLI tools. The initial use case is for augmenting `kubectl`.
 
 `ruin-kubectl` is a secure wrapper for `kubectl` that:
-- Prevents accidental production mistakes
-- Requires sudo or awareness prompts for flagged contexts
+- Prevents accidental destructive mistakes by prompting/delaying non-read actions
+- Requires `sudo` or awareness prompts for flagged contexts
 - Logs all sensitive command usage to a secure file or remote endpoint
 
 ---
@@ -87,6 +90,23 @@ audit:
   max_log_size_bytes: 5242880
 ```
 
+You can leave the default wildcard (`"*"`) to protect *all* contexts, or specify individual context aliases (e.g. `my-prod-cluster1`).
+
+### Map `kubectl` to `ruin-kubectl`
+
+After running the `install.sh` script and `ruin-kubectl init` you can also choose to add a function to your shell profile or config, like `~/.zshrc`:
+
+```bash
+# Example function in .zshrc
+function kubectl() {
+  ruin-kubectl "$@"
+}
+```
+
+This is useful if the option for symlinking does not work with the installation script. In some cases, the root profile and your user profile can conflict and mapping the existing `kubectl` command can cause a hang/non-zero exit because the `ruin-kubectl` binary is not getting passthrough from the actual `kubectl` binary. 
+
+Not sure if this is due to different installation mechanisms (e.g. `brew install` vs `curl` and copy as in the Kubernetes docs), but you can simply run the `uninstall.sh` script to remove the symlink or manually delete it, then use the function method.
+
 ## 🌀 Log Rotation
 
 - On Linux: installs `logrotate.d` rule
@@ -99,8 +119,8 @@ All logs are:
 - Designed for integration with Vector, syslog, or SIEMs
 
 ## 🔭 Roadmap
--	`ruin-aws` (IAM and CLI guardrails)
--	`ruin-git` (e.g. block force-push to main)
+-	`ruin-aws` (IAM and CLI guardrails) for `aws` commands
+-	`ruin-git` (e.g. block force-push to main, use other tools for secret and credential leak checks on push, etc.)
 -	`.deb`, `.rpm`, and `Homebrew` packages
 -	macOS `.dmg` installer
 - Additional log push/audit capabilities
@@ -113,4 +133,4 @@ PRs welcome!
 
 MIT © 2024–present [shadetree-dev](https://shadetree.dev/)
 
-I'm here to ruin responsibly 💥🛡️
+> "I'm here to ruin responsibly" 💥🛡️

@@ -6,7 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/) (assuming I d
 
 ---
 
-## [0.1.0] - 2024-04-16
+## [0.1.1] - 2025-04-30
+### Added
+- In `internal/awareness/prompt.go` added the `drain` action as a write operation.
+
+---
+
+## [0.1.0] - 2025-04-16
 ### Added
 - Initial pre-release of `ruin-kubectl`!
 - Created `Go` binary that enables prompting for protected Kubernetes contexts, logging, checking for context updates, and more.
